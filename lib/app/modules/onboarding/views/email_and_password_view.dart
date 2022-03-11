@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:tillage_farms/app/modules/oboarding/controllers/auth_controller.dart';
+import 'package:tillage_farms/app/modules/onboarding/controllers/auth_controller.dart';
 
 class EmailAndPassword extends GetView<AuthController> {
   const EmailAndPassword({Key? key}) : super(key: key);
@@ -33,6 +33,9 @@ class EmailAndPassword extends GetView<AuthController> {
               ),
               const SizedBox(height: 30),
               TextFormField(
+                controller: controller.emailTextEditingController,
+                initialValue: controller.email,
+                onChanged: (value) => controller.email = value,
                 decoration: InputDecoration(
                   isDense: true,
                   border: OutlineInputBorder(
@@ -59,6 +62,9 @@ class EmailAndPassword extends GetView<AuthController> {
               ),
               const SizedBox(height: 30),
               TextFormField(
+                controller: controller.passwordTextEditingController,
+                initialValue: controller.password,
+                onChanged: (value) => controller.password = value,
                 decoration: InputDecoration(
                   isDense: true,
                   suffixIcon: Icon(
@@ -86,6 +92,23 @@ class EmailAndPassword extends GetView<AuthController> {
                     fontSize: 20,
                   ),
                 ),
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      "I forgot my password",
+                      style: TextStyle(
+                        color: Color(0xFF4BB547),
+                        fontSize: 20,
+                        // fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 20),
               Row(

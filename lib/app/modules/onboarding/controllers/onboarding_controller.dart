@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
-class OboardingController extends GetxController {
-  //TODO: Implement OboardingController
+class OnboardingController extends GetxController {
+  //TODO: Implement OnboardingController
 
   final count = 0.obs;
   @override

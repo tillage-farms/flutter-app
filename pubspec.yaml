@@ -16,6 +16,9 @@ dependencies:
   google_fonts: 2.3.1
   flutter_svg: 1.0.3
   iconsax: 0.0.8
+  hive_flutter: 1.1.0
+  auto_route: 3.2.4
+  qlevar_router: 1.5.11
   flutter: 
     sdk: flutter
 
@@ -26,5 +29,10 @@ dev_dependencies:
     sdk: flutter
 
 flutter: 
+  assets: 
+    - assets/images/
+    - assets/svg/
+    - .env.development
+    - .env.production
   uses-material-design: true
 
