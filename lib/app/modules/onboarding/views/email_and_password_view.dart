@@ -34,7 +34,7 @@ class EmailAndPassword extends GetView<AuthController> {
               const SizedBox(height: 30),
               TextFormField(
                 controller: controller.emailTextEditingController,
-                initialValue: controller.email,
+                // initialValue: controller.email,
                 onChanged: (value) => controller.email = value,
                 decoration: InputDecoration(
                   isDense: true,
@@ -63,7 +63,7 @@ class EmailAndPassword extends GetView<AuthController> {
               const SizedBox(height: 30),
               TextFormField(
                 controller: controller.passwordTextEditingController,
-                initialValue: controller.password,
+                // initialValue: controller.password,
                 onChanged: (value) => controller.password = value,
                 decoration: InputDecoration(
                   isDense: true,
@@ -97,10 +97,12 @@ class EmailAndPassword extends GetView<AuthController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TextButton(
-                    onPressed: () {},
+                  ElevatedButton(
+                    onPressed: () {
+                      controller.signIn();
+                    },
                     child: Text(
-                      "I forgot my password",
+                      "Continue",
                       style: TextStyle(
                         color: Color(0xFF4BB547),
                         fontSize: 20,

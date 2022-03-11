@@ -1,6 +1,8 @@
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:nhost_flutter_auth/nhost_flutter_auth.dart';
+import 'package:get/get.dart' hide Response;
+// import 'package:nhost_flutter_auth/nhost_flutter_auth.dart';
 
 class AuthController extends GetxController {
   TextEditingController? usernameTextEditingController;
@@ -32,14 +34,24 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
-  Future<void> signInOrSignUp() async {
-    NhostClient nhostClient = Get.find<NhostClient>();
+  Future<void> signIn() async {
     try {
-      await nhostClient.auth.login(email: email, password: password);
-      return;
-    } on ApiException {
-      // Sign in failed, so try to register instead
-      await nhostClient.auth.register(email: email, password: password);
+      Client client = Get.find<Client>();
+      Account account = Account(client);
+
+      User user = await account.create(
+        userId: 'unique()',
+        email: email,
+        password: password,
+        name: 'Parables',
+      );
+
+      Session session = await account.createSession(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      print(e);
     }
   }
 }

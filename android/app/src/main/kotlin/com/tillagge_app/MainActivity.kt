@@ -1,4 +1,4 @@
-package com.tillagefarms.tillage_farms
+package com.tillagge_app
 
 import io.flutter.embedding.android.FlutterActivity
 

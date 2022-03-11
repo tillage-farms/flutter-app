@@ -10,6 +10,8 @@ class Environment {
       kReleaseMode ? ".env.production" : ".env.development";
 
   static String get NHOST_URL => dotenv.env["NHOST_URL"] ?? "";
+  static String get PROJECT_ID => dotenv.env["PROJECT_ID"] ?? "";
+  static String get ENDPOINT => dotenv.env["ENDPOINT"] ?? "";
 
   static String get PAYSTACK_PUBLIC_KEY {
     var key = dotenv.env['IS_PAYSTACK_LIVE'] == "true"

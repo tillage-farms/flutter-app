@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:get/get.dart';
+import 'package:tillage_farms/app/modules/onboarding/bindings/auth_binding.dart';
 import 'package:tillage_farms/app/modules/onboarding/views/email_and_password_view.dart';
 
 import '../controllers/onboarding_controller.dart';
@@ -74,7 +75,8 @@ class OnboardingView extends GetView<OnboardingController> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        Get.to(EmailAndPassword());
+                        Get.to(() => EmailAndPassword(),
+                            binding: AuthBinding());
                       },
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),

@@ -19,6 +19,7 @@ dependencies:
   hive_flutter: 1.1.0
   auto_route: 3.2.4
   qlevar_router: 1.5.11
+  appwrite: 4.0.1
   flutter: 
     sdk: flutter
 
