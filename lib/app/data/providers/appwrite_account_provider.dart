@@ -1,36 +1,67 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:qlevar_router/qlevar_router.dart';
+import 'package:tillage_farms/app/widgets/buttons.dart';
 
-class AppwriteAccountProvider extends GetxController with StateMixin {
+class AppwriteAccountProvider extends GetxController {
   static Client appwriteClient = Get.find<Client>();
+  static Box box = Get.find<Box>();
+
+  SubmitButtonController submitButtonController =
+      Get.find<SubmitButtonController>();
 
   final Account _account = Account(appwriteClient);
 
   static Account get account => Account(appwriteClient);
 
+  final Rx<User?> _currentUser = Rx<User?>(null);
+  User? get currentUser => _currentUser.value;
+  set currentUser(User? value) => _currentUser.value = value;
+
+  final Rx<Session?> _currentSession = Rx<Session?>(null);
+  Session? get currentSession => _currentSession.value;
+  set currentSession(Session? value) => _currentSession.value = value;
+
+  @override
+  void onInit() async {
+    super.onInit();
+    // currentUser = await getCurrentUser();
+
+    String sessionId = await box.get("sessionId", defaultValue: "");
+    print("sessionId: $sessionId");
+    if (sessionId.isNotEmpty) {
+      currentSession = await getSessionById(sessionId: sessionId);
+      print("current session: ${currentSession.toString()}");
+    }
+  }
+
   //  Create Account
-  Future<User?> createAccount({
+  Future<Session?> createAccount({
     String userId = "unique()",
     required String email,
     required String password,
     String? name,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
-      User user = await _account.create(
+      submitButtonController.buttonState = ButtonState.loading;
+
+      User? user = await _account.create(
         userId: userId,
         email: email,
         password: password,
       );
-      change(null, status: RxStatus.success());
-      return user;
+      currentUser = user;
+
+      // submitButtonController.buttonState = ButtonState.success;
+
+      return createAccountSession(email: email, password: password);
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -40,19 +71,21 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String password,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
+
       Session session = await _account.createSession(
         email: email,
         password: password,
       );
-      change(null, status: RxStatus.success());
+      currentSession = session;
+      box.put("sessionId", session.$id);
+
+      submitButtonController.buttonState = ButtonState.success;
       return session;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -64,21 +97,19 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     List<dynamic>? scopes,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Session session = await _account.createOAuth2Session(
         provider: provider,
         success: success,
         failure: failure,
         scopes: scopes,
       );
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return session;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -89,20 +120,18 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     String? url,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Token token = await _account.createMagicURLSession(
         userId: userId,
         email: email,
         url: url,
       );
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return token;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -113,115 +142,101 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     String? url,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Session session = await _account.updateMagicURLSession(
         userId: userId,
         secret: secret,
       );
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return session;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
 //  Create Anonymous Session
   Future<Session?> createAnonymousSession() async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Session session = await _account.createAnonymousSession();
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return session;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
 //  Create Account JWT
   Future<Jwt?> createJWT() async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Jwt jwt = await _account.createJWT();
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return jwt;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
 //  Get Account
   Future<User?> getCurrentUser() async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       User user = await _account.get();
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return user;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
 //  Get Account Preferences
   Future<Preferences?> getCurrentUserPrefs() async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Preferences preferences = await _account.getPrefs();
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return preferences;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
 //  Get Account Sessions
   Future<SessionList?> getSessions() async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       SessionList sessionList = await _account.getSessions();
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return sessionList;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
 //  Get Account Logs
   Future<LogList?> getActivityLogs() async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       LogList logList = await _account.getLogs();
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return logList;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -230,16 +245,14 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String sessionId,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Session session = await _account.getSession(sessionId: sessionId);
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return session;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -248,16 +261,14 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String name,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       User user = await _account.updateName(name: name);
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return user;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -267,19 +278,17 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     String? oldPassword,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       User user = await _account.updatePassword(
         password: password,
         oldPassword: oldPassword,
       );
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return user;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -289,19 +298,17 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String password,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       User user = await _account.updateEmail(
         email: email,
         password: password,
       );
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return user;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -310,31 +317,27 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required Map<String, dynamic> prefs,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       User user = await _account.updatePrefs(prefs: prefs);
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return user;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
 //  Delete Account
   Future<void> deleteAccount() async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       await _account.delete();
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
   }
 
 //  Delete Account Session
@@ -342,15 +345,14 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String sessionId,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
+      await box.clear();
       await _account.deleteSession(sessionId: sessionId);
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
   }
 
 //  Update Session (Refresh Tokens)
@@ -358,31 +360,27 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String sessionId,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Session session = await _account.updateSession(sessionId: sessionId);
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return session;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
 //  Delete All Account Sessions
   Future<void> deleteAccountSessions() async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       await _account.deleteSessions();
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
   }
 
 //  Create Password Recovery
@@ -391,19 +389,17 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String url,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Token token = await _account.createRecovery(
         email: email,
         url: url,
       );
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return token;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -415,21 +411,19 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String passwordAgain,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Token token = await _account.updateRecovery(
         userId: userId,
         secret: secret,
         password: password,
         passwordAgain: passwordAgain,
       );
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return token;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -438,16 +432,14 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String url,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
       Token token = await _account.createVerification(url: url);
-      change(null, status: RxStatus.success());
+      submitButtonController.buttonState = ButtonState.success;
       return token;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
   }
 
@@ -457,19 +449,35 @@ class AppwriteAccountProvider extends GetxController with StateMixin {
     required String secret,
   }) async {
     try {
-      change(null, status: RxStatus.loading());
+      submitButtonController.buttonState = ButtonState.loading;
+
       Token token = await _account.updateVerification(
         userId: userId,
         secret: secret,
       );
-      change(null, status: RxStatus.success());
+
+      submitButtonController.buttonState = ButtonState.success;
       return token;
     } on AppwriteException catch (e) {
-      //show message to user or do other operation based on error as required
-      print(e.message);
-      change(e, status: RxStatus.error(e.message));
+      handleAppwriteException(exception: e);
+      submitButtonController.buttonState = ButtonState.error;
     }
-    change(null, status: RxStatus.empty());
     return null;
+  }
+
+  void handleAppwriteException({required AppwriteException exception}) {
+    print(exception.message);
+
+    Get.snackbar(
+      "Something went wrong",
+      exception.message ?? "Please try again later",
+      snackPosition: SnackPosition.BOTTOM,
+    );
+    /* QR.show(
+      QDialog.text(
+        text: Text("Something went wrong"),
+      ),
+    );
+ */
   }
 }

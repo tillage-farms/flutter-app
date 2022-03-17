@@ -1,105 +1,82 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-
 import 'package:get/get.dart';
-import 'package:tillage_farms/app/modules/onboarding/bindings/auth_binding.dart';
-import 'package:tillage_farms/app/modules/onboarding/views/email_and_password_view.dart';
-
-import '../controllers/onboarding_controller.dart';
+import 'package:qlevar_router/qlevar_router.dart';
+import 'package:tillage_farms/app/modules/onboarding/controllers/onboarding_controller.dart';
+import 'package:tillage_farms/app/routes/qlevar_router.dart';
+import 'package:tillage_farms/app/theme/core/values/colors.dart';
+import 'package:tillage_farms/app/widgets/buttons.dart';
 
 class OnboardingView extends GetView<OnboardingController> {
+  const OnboardingView({Key? key, required this.qRouter}) : super(key: key);
+
+  final QRouter qRouter;
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Image.asset(
-          "assets/images/pattern_bg.png",
-          fit: BoxFit.cover,
-          width: double.infinity,
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        title: GestureDetector(
+          onTap: () => QR.back(),
+          child: Icon(
+            Icons.arrow_circle_left,
+            color: AppColors.primaryAccentColor,
+            size: 32,
+          ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 37.0, vertical: 52),
+        bottom: PreferredSize(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              RichText(
-                text: const TextSpan(
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  children: [
-                    TextSpan(text: "Where\n"),
-                    TextSpan(text: "Restaurants in\n"),
-                    TextSpan(text: "Africa buy\n"),
-                    TextSpan(text: "food"),
-                    TextSpan(
-                        text: " supplies.",
-                        style: TextStyle(color: Color(0xFFA5DAA3))),
-                  ],
+              SizedBox(height: 20),
+              Text(
+                controller.pageTitle,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryColor,
                 ),
               ),
-              const SizedBox(height: 15),
-              Padding(
-                padding: const EdgeInsets.only(left: 70.0),
-                child: SvgPicture.asset("assets/svg/loader.svg"),
-              ),
-              const SizedBox(height: 25),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          "Sign Up",
-                          style: TextStyle(
-                            fontSize: 24,
-                          ),
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        primary: const Color(0xFFA5DAA3),
-                        onPrimary: Colors.white,
-                        elevation: 0,
-                      ),
-                    ),
+              if (controller.pageSubTitle != null) ...[
+                const SizedBox(height: 15),
+                Text(
+                  controller.pageSubTitle!,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black45,
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Get.to(() => EmailAndPassword(),
-                            binding: AuthBinding());
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          "Sign Up",
-                          style: TextStyle(
-                            fontSize: 24,
-                          ),
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        primary: Colors.white,
-                        onPrimary: Color(0xFF4BB547),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-                ],
-              )
+                ),
+              ],
             ],
           ),
-        )
-      ],
+          preferredSize: Size.fromHeight(100),
+        ),
+      ),
+      body: qRouter,
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+        child: Obx(
+          () => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PrimaryButton(
+                onPressed: () => controller.onPrimaryButtonPressed(),
+                text: controller.primaryButtonText,
+              ),
+              SizedBox(height: 20),
+              if (controller.secondaryButtonText != null)
+                SecondaryButton(
+                  onPressed: () => controller.onSecondaryButtonPressed(),
+                  text: controller.secondaryButtonText,
+                )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
